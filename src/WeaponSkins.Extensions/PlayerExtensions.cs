@@ -19,17 +19,23 @@ public static class PlayerExtensions
         CBasePlayerWeapon weapon,
         ushort newIndex)
     {
+        if (!player.IsAlive || player.PlayerPawn is not { IsValid: true } pawn)
+            return;
+        if (!weapon.IsValid)
+            return;
+
         if (newIndex == Core.Helpers.GetDefinitionIndexByClassname("weapon_taser"))
         {
             player.RegiveTaser(weapon);
             return;
         }
 
-        var name = Core.Helpers.GetClassnameByDefinitionIndex(newIndex)!;
+        var name = Core.Helpers.GetClassnameByDefinitionIndex(newIndex);
+        if (name == null) return;
         var clip1 = weapon.Clip1;
         var reservedAmmo = weapon.ReserveAmmo[0];
-        player.PlayerPawn!.WeaponServices!.RemoveWeapon(weapon);
-        var newWeapon = player.PlayerPawn!.ItemServices!.GiveItem<CBasePlayerWeapon>(name);
+        pawn.WeaponServices!.RemoveWeapon(weapon);
+        var newWeapon = pawn.ItemServices!.GiveItem<CBasePlayerWeapon>(name);
         newWeapon.Clip1 = clip1;
         newWeapon.ReserveAmmo[0] = reservedAmmo;
     }
