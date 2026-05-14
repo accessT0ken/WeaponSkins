@@ -543,9 +543,17 @@ public class HookInventoryUpdateService : IInventoryUpdateService
     private void ApplyGlove(CCSPlayerPawn pawn,
         GloveData glove)
     {
+        if (glove.DefinitionIndex == 0) return;
+
         Core.Scheduler.NextWorldUpdate(() =>
         {
+            if (!pawn.IsValid) return;
+
             var econGloves = pawn.EconGloves;
+
+            econGloves.AttributeList.Attributes.RemoveAll();
+            econGloves.NetworkedDynamicAttributes.Attributes.RemoveAll();
+
             econGloves.ItemDefinitionIndex = glove.DefinitionIndex;
             econGloves.NetworkedDynamicAttributes.SetOrAddAttribute("set item texture prefab", glove.Paintkit);
             econGloves.NetworkedDynamicAttributes.SetOrAddAttribute("set item texture seed", glove.PaintkitSeed);
@@ -554,9 +562,11 @@ public class HookInventoryUpdateService : IInventoryUpdateService
             econGloves.AttributeList.SetOrAddAttribute("set item texture seed", glove.PaintkitSeed);
             econGloves.AttributeList.SetOrAddAttribute("set item texture wear", glove.PaintkitWear);
             econGloves.Initialized = true;
+
             pawn.AcceptInput("SetBodygroup", "first_or_third_person,0");
             Core.Scheduler.DelayBySeconds(0.2f, () =>
             {
+                if (!pawn.IsValid) return;
                 pawn.AcceptInput("SetBodygroup", "first_or_third_person,1");
             });
         });
