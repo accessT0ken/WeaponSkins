@@ -12,5 +12,7 @@ public class MainConfigModel
 
     public List<string> ItemLanguages { get; set; } = [];
 
+    public bool EnableWsCommand { get; set; } = true;
+
     public ItemPermissionConfig ItemPermissions { get; set; } = new();
 }

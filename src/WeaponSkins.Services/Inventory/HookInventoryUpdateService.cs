@@ -549,12 +549,26 @@ public class HookInventoryUpdateService : IInventoryUpdateService
         {
             if (!pawn.IsValid) return;
 
+            var controllerHandle = pawn.Controller;
+            if (!controllerHandle.IsValid) return;
+            var controller = controllerHandle.Value;
+            if (controller == null || !controller.IsValid) return;
+
+            if (!InventoryService.TryGet(controller.SteamID, out var inv)) return;
+            var itemInLoadout =
+                inv.GetItemInLoadout(controller.Team, loadout_slot_t.LOADOUT_SLOT_CLOTHING_HANDS);
+            if (itemInLoadout == null) return;
+
             var econGloves = pawn.EconGloves;
 
             econGloves.AttributeList.Attributes.RemoveAll();
             econGloves.NetworkedDynamicAttributes.Attributes.RemoveAll();
 
             econGloves.ItemDefinitionIndex = glove.DefinitionIndex;
+            econGloves.AccountID = itemInLoadout.AccountID;
+            econGloves.ItemID = itemInLoadout.ItemID;
+            econGloves.ItemIDHigh = itemInLoadout.ItemIDHigh;
+            econGloves.ItemIDLow = itemInLoadout.ItemIDLow;
             econGloves.NetworkedDynamicAttributes.SetOrAddAttribute("set item texture prefab", glove.Paintkit);
             econGloves.NetworkedDynamicAttributes.SetOrAddAttribute("set item texture seed", glove.PaintkitSeed);
             econGloves.NetworkedDynamicAttributes.SetOrAddAttribute("set item texture wear", glove.PaintkitWear);
@@ -562,6 +576,8 @@ public class HookInventoryUpdateService : IInventoryUpdateService
             econGloves.AttributeList.SetOrAddAttribute("set item texture seed", glove.PaintkitSeed);
             econGloves.AttributeList.SetOrAddAttribute("set item texture wear", glove.PaintkitWear);
             econGloves.Initialized = true;
+
+            NativeService.UpdateItemView.CallOriginal(econGloves.Address, 0);
 
             pawn.AcceptInput("SetBodygroup", "first_or_third_person,0");
             Core.Scheduler.DelayBySeconds(0.2f, () =>
