@@ -44,9 +44,9 @@ public record SkinModel
 
     [Column(Name = "weapon_keychain")] public string Keychain { get; set; } = "0;0;0;0;0";
 
-    private static StickerData ToStickerModel(string sticker)
+    private static StickerData ToStickerModel(string? sticker)
     {
-        var parts = sticker.Split(';');
+        var parts = (sticker ?? "0;0;0;0;0;0;0").Split(';');
         return new StickerData
         {
             Id = int.Parse(parts[0]),
@@ -66,9 +66,9 @@ public record SkinModel
             $"{sticker.Id};{sticker.Schema};{sticker.OffsetX};{sticker.OffsetY};{sticker.Wear};{sticker.Scale};{sticker.Rotation}";
     }
 
-    private static KeychainData ToKeychainModel(string keychain)
+    private static KeychainData ToKeychainModel(string? keychain)
     {
-        var parts = keychain.Split(';');
+        var parts = (keychain ?? "0;0;0;0;0").Split(';');
         return new KeychainData
         {
             Id = int.Parse(parts[0]),
