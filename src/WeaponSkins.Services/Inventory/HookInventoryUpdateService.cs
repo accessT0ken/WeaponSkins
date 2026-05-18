@@ -617,11 +617,11 @@ public class HookInventoryUpdateService : IInventoryUpdateService
 
             NativeService.UpdateItemView.CallOriginal(econGloves.Address, 0);
 
-            pawn.AcceptInput("SetBodygroup", "first_or_third_person,1");
+            pawn.AcceptInput("SetBodygroup", "first_or_third_person,0");
             Core.Scheduler.DelayBySeconds(0.2f, () =>
             {
                 if (!pawn.IsValid) return;
-                pawn.AcceptInput("SetBodygroup", "first_or_third_person,0");
+                pawn.AcceptInput("SetBodygroup", "first_or_third_person,1");
             });
         });
     }
