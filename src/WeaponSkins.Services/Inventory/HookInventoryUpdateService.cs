@@ -16,6 +16,11 @@ namespace WeaponSkins.Services;
 
 public class HookInventoryUpdateService : IInventoryUpdateService
 {
+    // Custom item ID range that does not overlap with real GC item IDs.
+    // Mirrors the MinimumCustomItemId approach used by WeaponPaints.
+    private const ulong MinimumCustomItemId = 65578;
+    private ulong _nextGloveItemId = MinimumCustomItemId;
+
     private ISwiftlyCore Core { get; }
     private InventoryService InventoryService { get; }
     private PlayerService PlayerService { get; }
@@ -562,24 +567,16 @@ public class HookInventoryUpdateService : IInventoryUpdateService
     {
         if (glove.DefinitionIndex == 0) return;
 
+        // Generate a fresh item ID in the custom range (>= 65578) that never
+        // conflicts with real GC item IDs. This is the same approach WeaponPaints
+        // uses. Without a fresh ID, players who own real Steam gloves see invisible
+        // or default gloves because the engine detects a mismatch between the real
+        // GC ItemID (tied to their actual glove type) and the overridden DefIndex.
+        var customItemId = _nextGloveItemId++;
+
         Core.Scheduler.NextWorldUpdate(() =>
         {
             if (!pawn.IsValid) return;
-
-            var controllerHandle = pawn.Controller;
-            if (!controllerHandle.IsValid) return;
-            var controller = controllerHandle.Value;
-            if (controller == null || !controller.IsValid) return;
-
-            // Read the glove item from the SO cache loadout. UpdatePlayerGloveInventory
-            // runs UpdateGloveSkin first (also NextWorldUpdate), so by the time this
-            // executes the loadout already holds our custom CEconItem — not the real
-            // GC item the player may own. That prevents the ItemID ↔ DefIndex mismatch
-            // that caused invisible/default gloves for real-inventory owners.
-            if (!InventoryService.TryGet(controller.SteamID, out var inv)) return;
-            var itemInLoadout =
-                inv.GetItemInLoadout(controller.Team, loadout_slot_t.LOADOUT_SLOT_CLOTHING_HANDS);
-            if (itemInLoadout == null) return;
 
             var econGloves = pawn.EconGloves;
 
@@ -587,10 +584,9 @@ public class HookInventoryUpdateService : IInventoryUpdateService
             econGloves.NetworkedDynamicAttributes.Attributes.RemoveAll();
 
             econGloves.ItemDefinitionIndex = glove.DefinitionIndex;
-            econGloves.AccountID = itemInLoadout.AccountID;
-            econGloves.ItemID = itemInLoadout.ItemID;
-            econGloves.ItemIDHigh = itemInLoadout.ItemIDHigh;
-            econGloves.ItemIDLow = itemInLoadout.ItemIDLow;
+            econGloves.ItemID = customItemId;
+            econGloves.ItemIDLow = (uint)(customItemId & 0xFFFFFFFF);
+            econGloves.ItemIDHigh = (uint)(customItemId >> 32);
             econGloves.NetworkedDynamicAttributes.SetOrAddAttribute("set item texture prefab", glove.Paintkit);
             econGloves.NetworkedDynamicAttributes.SetOrAddAttribute("set item texture seed", glove.PaintkitSeed);
             econGloves.NetworkedDynamicAttributes.SetOrAddAttribute("set item texture wear", glove.PaintkitWear);

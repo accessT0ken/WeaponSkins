@@ -30,19 +30,19 @@ public record SkinModel
     [Column(Name = "weapon_stattrak_count")]
     public int StattrakCount { get; set; } = 0;
 
-    [Column(Name = "weapon_sticker_0")] public string Sticker0 { get; set; } = "0;0;0;0;0;0;0";
+    [Column(Name = "weapon_sticker_0")] public string? Sticker0 { get; set; } = "0;0;0;0;0;0;0";
 
-    [Column(Name = "weapon_sticker_1")] public string Sticker1 { get; set; } = "0;0;0;0;0;0;0";
+    [Column(Name = "weapon_sticker_1")] public string? Sticker1 { get; set; } = "0;0;0;0;0;0;0";
 
-    [Column(Name = "weapon_sticker_2")] public string Sticker2 { get; set; } = "0;0;0;0;0;0;0";
+    [Column(Name = "weapon_sticker_2")] public string? Sticker2 { get; set; } = "0;0;0;0;0;0;0";
 
-    [Column(Name = "weapon_sticker_3")] public string Sticker3 { get; set; } = "0;0;0;0;0;0;0";
+    [Column(Name = "weapon_sticker_3")] public string? Sticker3 { get; set; } = "0;0;0;0;0;0;0";
 
-    [Column(Name = "weapon_sticker_4")] public string Sticker4 { get; set; } = "0;0;0;0;0;0;0";
+    [Column(Name = "weapon_sticker_4")] public string? Sticker4 { get; set; } = "0;0;0;0;0;0;0";
 
-    [Column(Name = "weapon_sticker_5")] public string Sticker5 { get; set; } = "0;0;0;0;0;0;0";
+    [Column(Name = "weapon_sticker_5")] public string? Sticker5 { get; set; } = "0;0;0;0;0;0;0";
 
-    [Column(Name = "weapon_keychain")] public string Keychain { get; set; } = "0;0;0;0;0";
+    [Column(Name = "weapon_keychain")] public string? Keychain { get; set; } = "0;0;0;0;0";
 
     private static StickerData ToStickerModel(string? sticker)
     {
