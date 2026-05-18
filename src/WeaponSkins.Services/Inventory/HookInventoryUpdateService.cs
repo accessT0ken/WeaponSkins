@@ -52,6 +52,7 @@ public class HookInventoryUpdateService : IInventoryUpdateService
         EconService = econService;
 
         NativeService.OnGiveNamedItemPost += OnGiveNamedItemPost;
+        NativeService.OnSOCacheSubscribed += OnSOCacheSubscribed;
         Core.GameEvent.HookPost<EventPlayerSpawn>(OnPlayerSpawn);
 
         foreach (var player in Core.PlayerManager.GetAllPlayers())
@@ -108,6 +109,25 @@ public class HookInventoryUpdateService : IInventoryUpdateService
         });
 
         return HookResult.Continue;
+    }
+
+    // The GC fires SOCacheSubscribed whenever it (re)subscribes a player's inventory,
+    // including at round-start after freeze time. Without this hook, the GC refresh
+    // overwrites our pawn.EconGloves patch and the player reverts to real/default gloves.
+    private void OnSOCacheSubscribed(CCSPlayerInventory inventory,
+        SOID_t soid)
+    {
+        if (!PlayerService.TryGetPlayer(soid.SteamID, out var player)) return;
+
+        Core.Scheduler.NextWorldUpdate(() =>
+        {
+            ApplyPlayerGlove(player);
+        });
+
+        Core.Scheduler.DelayBySeconds(0.1f, () =>
+        {
+            ApplyPlayerGlove(player);
+        });
     }
 
     private void UpdatePlayerGloveInventory(IPlayer player)
