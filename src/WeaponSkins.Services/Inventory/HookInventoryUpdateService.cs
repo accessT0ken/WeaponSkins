@@ -84,6 +84,12 @@ public class HookInventoryUpdateService : IInventoryUpdateService
     {
         IPlayer player = @event.UserIdPlayer;
 
+        // Update the SO cache inventory first so custom glove item is registered
+        // before pawn-level EconGloves patch runs. Without this, players who own
+        // real Steam gloves see invisible/default because the GC item ID on their
+        // loadout belongs to a different glove definition than the one we override.
+        UpdatePlayerGloveInventory(player);
+
         Core.Scheduler.NextWorldUpdate(() =>
         {
             ApplyPlayerGlove(player);
@@ -97,6 +103,17 @@ public class HookInventoryUpdateService : IInventoryUpdateService
         });
 
         return HookResult.Continue;
+    }
+
+    private void UpdatePlayerGloveInventory(IPlayer player)
+    {
+        if (!Api.TryGetGloveSkins(player.SteamID, out var gloves)) return;
+        if (!InventoryService.TryGet(player.SteamID, out var inv)) return;
+
+        foreach (var glove in gloves)
+        {
+            inv.UpdateGloveSkin(glove);
+        }
     }
 
     private string? GetRefreshModel(string currentModel,
@@ -554,6 +571,11 @@ public class HookInventoryUpdateService : IInventoryUpdateService
             var controller = controllerHandle.Value;
             if (controller == null || !controller.IsValid) return;
 
+            // Read the glove item from the SO cache loadout. UpdatePlayerGloveInventory
+            // runs UpdateGloveSkin first (also NextWorldUpdate), so by the time this
+            // executes the loadout already holds our custom CEconItem — not the real
+            // GC item the player may own. That prevents the ItemID ↔ DefIndex mismatch
+            // that caused invisible/default gloves for real-inventory owners.
             if (!InventoryService.TryGet(controller.SteamID, out var inv)) return;
             var itemInLoadout =
                 inv.GetItemInLoadout(controller.Team, loadout_slot_t.LOADOUT_SLOT_CLOTHING_HANDS);
